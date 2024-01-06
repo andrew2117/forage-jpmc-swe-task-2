@@ -8,6 +8,7 @@ import './App.css';
  */
 interface IState {
   data: ServerRespond[],
+  showGraph: boolean,
 }
 
 /**
@@ -22,6 +23,8 @@ class App extends Component<{}, IState> {
       // data saves the server responds.
       // We use this state to parse data down to the child element (Graph) as element property
       data: [],
+      //showGraph is true when the user clicks the button
+      showGraph: false,
     };
   }
 
@@ -29,18 +32,35 @@ class App extends Component<{}, IState> {
    * Render Graph react component with state.data parse as property data
    */
   renderGraph() {
-    return (<Graph data={this.state.data}/>)
+    // if the button is pressed show the graph
+    if(this.state.showGraph){
+      return (<Graph data={this.state.data}/>)
+    }
   }
 
   /**
    * Get new data from server and update the state with the new data
    */
   getDataFromServer() {
-    DataStreamer.getData((serverResponds: ServerRespond[]) => {
-      // Update the state by creating a new array of data that consists of
-      // Previous data in the state and the new data from server
-      this.setState({ data: [...this.state.data, ...serverResponds] });
-    });
+    let x = 0; // initialize a variable to keep track of the number of iterations
+
+    //set up the interval to reload the graph data every 100 milliseconds
+    const interval = setInterval(() => {
+      DataStreamer.getData((serverResponds: ServerRespond[]) => {
+        // Update the state by creating a new array of data that consists of
+        // Previous data in the state and the new data from server\
+        this.setState({
+          data: serverResponds,
+          showGraph: true,
+        });
+        //this.setState({ data: [...this.state.data, ...serverResponds] });
+      });
+      x++;
+      //check if the number of iterations exceeds 1000 and stop the interval
+      if(x > 1000){
+        clearInterval(interval);
+      } 
+    }, 100);
   }
 
   /**
